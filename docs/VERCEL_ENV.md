@@ -191,3 +191,46 @@ node-gyp native steps for `bigint-buffer` and `dtrace-provider`).
 
 Do not raise the heap cap back to 8096 on a Basic machine — it makes the crash
 look like a random container kill instead of a clear V8 heap error.
+
+## How to deploy: GitHub Actions builds, Vercel only serves
+
+Vercel's Hobby build machine is **2 vCPU / 8 GB** and cannot be upgraded. This
+app's build peaks at ~7 GB, and the container is killed during "rendering
+chunks" every time — with the heap cap raised the kill comes from the container,
+with the cap lowered V8 itself runs out. There is no cap that satisfies both.
+
+A **public** repository gets a **4 vCPU / 16 GB** GitHub-hosted runner for free,
+so the bundle is built there and only the prebuilt output is uploaded:
+
+`.github/workflows/deploy-vercel.yml` runs on every push to `master`:
+
+```bash
+vercel pull --yes --environment=production
+vercel build --prod
+vercel deploy --prebuilt --prod
+```
+
+`vercel.json` therefore sets `git.deploymentEnabled: false`, so Vercel stops
+attempting (and failing) its own build on every push.
+
+### One-time setup (three repository secrets)
+
+1. Create a token at https://vercel.com/account/tokens -> **`VERCEL_TOKEN`**
+2. Run `vercel link` once in the repository, then read `.vercel/project.json`:
+    - `projectId` -> **`VERCEL_PROJECT_ID`**
+    - `orgId` -> **`VERCEL_ORG_ID`**
+3. Add all three under **Settings -> Secrets and variables -> Actions**.
+
+Environment variables are **not** duplicated in GitHub: `vercel pull` downloads
+them from the Vercel project, so the dashboard stays the single source of truth.
+
+### Manual fallback from your own machine
+
+```bash
+vercel pull --yes --environment=production
+vercel build --prod
+vercel deploy --prebuilt --prod
+```
+
+If you later move to a Pro plan with an Enhanced/Turbo build machine, delete the
+workflow and set `git.deploymentEnabled` back to `true` to let Vercel build again.
