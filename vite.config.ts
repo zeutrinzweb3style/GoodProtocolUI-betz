@@ -91,6 +91,12 @@ export default defineConfig(({ command, mode }) => {
             commonjsOptions: {
                 transformMixedEsModules: true, //handle deps that use "require" and "module.exports"
             },
+            // 14690 modules on an 8 GB build machine: the compressed-size report and
+            // unbounded parallel file IO are the cheapest memory savings available.
+            reportCompressedSize: false,
+            rollupOptions: {
+                maxParallelFileOps: 2,
+            },
         },
         define: {
             'process.browser': true,

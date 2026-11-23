@@ -4,6 +4,9 @@
     "version": "1.140.0",
     "homepage": ".",
     "private": true,
+    "engines": {
+        "node": "20.x"
+    },
     "scripts": {
         "analyze": "source-map-explorer 'dist/static/*.js' --only-mapped --html analysis/index.html",
         "prebuild": "yarn install --immutable && lingui compile",
@@ -11,7 +14,7 @@
         "startS": "cross-env HTTPS=true SSL_CRT_FILE='./.certs/ssl.crt' SSL_KEY_FILE='./.certs/ssl.key' PORT=1122 vite --port 1122",
         "start": "vite --port 3000",
         "preview": "vite preview --port 3000",
-        "build": "NODE_OPTIONS=--max-old-space-size=8096 vite build",
+        "build": "NODE_OPTIONS=--max-old-space-size=7168 vite build",
         "test": "jest --env=jsdom",
         "lingui": "lingui extract && lingui compile",
         "lint": "eslint src",
