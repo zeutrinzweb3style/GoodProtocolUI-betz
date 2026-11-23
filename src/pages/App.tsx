@@ -19,6 +19,7 @@ import TransactionUpdater from '../state/transactions/updater'
 import useSendAnalyticsData from 'hooks/useSendAnalyticsData'
 import { useIsSimpleApp } from 'state/simpleapp/simpleapp'
 import MainPageContainer from 'components/Layout/MainPageContainer'
+import SupportChat from 'components/SupportChat'
 import { isMiniPay } from 'utils/minipay'
 
 export const Beta = styled.div`
@@ -99,7 +100,6 @@ function App(): JSX.Element {
     const isMinipay = isMiniPay()
     const { open, url, onClose } = useRedirectNotice()
     const { isDesktopView } = useScreenSize()
-    // const walletChatEnabled = useFeatureFlag('wallet-chat')
 
     void useFaucet()
 
@@ -188,7 +188,7 @@ function App(): JSX.Element {
                         </Web3ReactManager>
                     </MainPageContainer>
                 </Wrapper>
-                {/* {!isSimpleApp && !sidebarOpen && walletChatEnabled && <WalletChat />} */}
+                {!isSimpleApp && !sidebarOpen && <SupportChat />}
             </AppWrap>
         </Suspense>
     )
