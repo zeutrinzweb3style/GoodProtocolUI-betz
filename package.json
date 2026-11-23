@@ -5,7 +5,7 @@
     "homepage": ".",
     "private": true,
     "engines": {
-        "node": "20.x"
+        "node": "26.x"
     },
     "scripts": {
         "analyze": "source-map-explorer 'dist/static/*.js' --only-mapped --html analysis/index.html",

@@ -65,18 +65,68 @@ REACT_APP_UBIPOOL_ADDRESSES='{"ALT":"0xa6d77aa130e729886c90a48e0ee539d6c6795df7"
 
 ---
 
-## Copy-paste block for Vercel
+## Copy-paste block for Vercel (complete)
+
+Every variable the app reads, in one block. Values that work out of the box are
+filled in; the rest are blank because blank means "feature off / use the built-in
+default".
 
 ```
+# ---- REQUIRED ------------------------------------------------------------
 REACT_APP_NETWORK=production-celo
 REOWN_PROJECT_ID=
+
+# ---- RECOMMENDED (public endpoints, sane defaults exist) ------------------
 REACT_APP_CELO_RPC=https://forno.celo.org
 REACT_APP_FUSE_RPC=https://rpc.fuse.io
 REACT_APP_XDC_RPC=https://rpc.xinfin.network
+REACT_APP_MAINNET_RPC=https://eth.llamarpc.com
 REACT_APP_ENABLE_SERVICE_WORKER=1
 REACT_APP_ENABLE_HTTPS_REDIRECT=1
+
+# ---- OPTIONAL (blank = default / off) ------------------------------------
+REACT_APP_RPC_FALLBACK_CHAIN_IDS=1,122,42220,50
+REACT_APP_EXCLUDED_RPCS=
+REACT_APP_CELO_PHASE_3=
+REACT_APP_UBIPOOL_ADDRESSES=
+REACT_APP_GOODID_CELO_EXPLORER=
+REACT_APP_GOODID_FUSE_EXPLORER=
+REACT_APP_GOODID_XDC_EXPLORER=
+REACT_APP_GOODID_MAINNET_EXPLORER=
+REACT_APP_GRAPH_KEY=
+REACT_APP_POSTHOG_KEY=
+REACT_APP_POSTHOG_PROXY=
+REACT_APP_GOOGLE_ANALYTICS_ID=
+REACT_APP_INDICATIVE_KEY=
+REACT_APP_ONRAMPER_KEY=
+REACT_APP_ETHERSCAN_KEY=
+REACT_APP_DATASTUDIO_DASHBOARD_URL=
+REACT_APP_FEEDCONTEXT_PROD=
+
+# ---- ON-CHAIN SUPPORT CHAT (blank contract = widget hidden) --------------
+REACT_APP_SUPPORT_CHAT_CONTRACT=
+REACT_APP_SUPPORT_CHAT_DEPLOY_BLOCK=
 REACT_APP_SUPPORT_TG_URL=https://t.me/GoodDollarX
 ```
+
+Notes on the optional ones:
+
+-   `REACT_APP_RPC_FALLBACK_CHAIN_IDS` defaults to all four supported chains
+    (`1,122,42220,50`); the fallback list is fetched from `chainlist.org` with
+    built-in per-chain defaults.
+-   `REACT_APP_UBIPOOL_ADDRESSES` blank makes the claim wizard use the pool
+    addresses it ships with. Only set it to override them (JSON string).
+-   `REACT_APP_GOODID_CELO_EXPLORER` blank builds a Celo Etherscan URL that
+    **needs `REACT_APP_ETHERSCAN_KEY`**. Set both, or set the explorer URL
+    yourself (`https://api.celoscan.io/api?`).
+-   `REACT_APP_ETHERSCAN_KEY` is only used for that explorer URL.
+-   `REACT_APP_POSTHOG_KEY` / `REACT_APP_GOOGLE_ANALYTICS_ID` / `REACT_APP_INDICATIVE_KEY`
+    are analytics. Use your **own** project: reusing another deployment's key
+    sends your visitors' events into their account.
+-   `REACT_APP_CELO_PHASE_3` shows the Savings sections on Stake/Portfolio.
+-   `REACT_APP_DATASTUDIO_DASHBOARD_URL` is the dashboard embed; blank hides it.
+-   `REACT_APP_FEEDCONTEXT_PROD` is the news-feed context; blank uses the default.
+-   `REACT_APP_EXCLUDED_RPCS` is a comma separated deny-list of RPC URLs.
 
 ## Project settings
 
@@ -86,7 +136,7 @@ REACT_APP_SUPPORT_TG_URL=https://t.me/GoodDollarX
 | Build command    | `yarn build` (already in `vercel.json`)                   |
 | Output directory | `dist`                                                    |
 | Install command  | `yarn install` (yarn 3.6.1 is pinned in `.yarn/releases`) |
-| Node.js version  | 20.x                                                      |
+| Node.js version  | 26.x (Vercel discontinued 20.x)                           |
 
 **`vercel.json` currently sets `"git": { "deploymentEnabled": false }`** — git
 pushes will not deploy until that is changed to `true` (or removed) or you deploy
@@ -112,14 +162,16 @@ detected in the build report) — usually while "rendering chunks".
 
 Measured here against the real dependency tree:
 
-| heap cap | result                               |
-| -------- | ------------------------------------ |
-| 6144 MB  | V8 heap OOM (peak 6.9 GB RSS)        |
-| 7168 MB  | **succeeds**, peak 7.2 GB RSS, 2m22s |
-| 8192 MB  | succeeds, peak 6.8 GB RSS            |
+| heap cap | result                                   |
+| -------- | ---------------------------------------- |
+| 6144 MB  | V8 heap OOM (peak 6.9 GB RSS)            |
+| 7168 MB  | **succeeds**, peak 6.9-7.2 GB RSS, 2m22s |
+| 8192 MB  | succeeds, peak 6.8 GB RSS                |
 
 `package.json` therefore builds with `--max-old-space-size=7168` and pins
-`engines.node` to `20.x` (the failing build ran Node 26, which also broke the
+`engines.node` to `26.x`. Vercel discontinued Node 20, so anything lower fails
+before the install step with `Node.js Version "20.x" is discontinued`. Measured on
+Node 26.13.1 (the version Vercel runs): peak 6.9 GB RSS.
 node-gyp native steps for `bigint-buffer` and `dtrace-provider`).
 `vite.config.ts` additionally sets `reportCompressedSize: false` and
 `rollupOptions.maxParallelFileOps: 2`.
