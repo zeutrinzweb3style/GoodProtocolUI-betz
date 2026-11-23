@@ -21,13 +21,13 @@ env:
 jobs:
     release:
         name: Release
-        if: "github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'production'"
+        if: "github.repository == 'GoodDollar/GoodProtocolUI' && github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'production'"
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/setup-node@v3
+            - uses: actions/setup-node@v4
               with:
-                  node-version: 20
-            - uses: actions/checkout@v3
+                  node-version: 26
+            - uses: actions/checkout@v4
               with:
                   persist-credentials: false
                   fetch-depth: 0
@@ -48,10 +48,10 @@ jobs:
     deploy:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-node@v3
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version: 26
                   cache: yarn
             - run: yarn install --immutable
             - run: yarn vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
