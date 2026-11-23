@@ -136,7 +136,7 @@ Notes on the optional ones:
 | Build command    | `yarn build` (already in `vercel.json`)                   |
 | Output directory | `dist`                                                    |
 | Install command  | `yarn install` (yarn 3.6.1 is pinned in `.yarn/releases`) |
-| Node.js version  | 20.x                                                      |
+| Node.js version  | 26.x (Vercel discontinued 20.x)                           |
 
 **`vercel.json` currently sets `"git": { "deploymentEnabled": false }`** — git
 pushes will not deploy until that is changed to `true` (or removed) or you deploy
@@ -162,14 +162,16 @@ detected in the build report) — usually while "rendering chunks".
 
 Measured here against the real dependency tree:
 
-| heap cap | result                               |
-| -------- | ------------------------------------ |
-| 6144 MB  | V8 heap OOM (peak 6.9 GB RSS)        |
-| 7168 MB  | **succeeds**, peak 7.2 GB RSS, 2m22s |
-| 8192 MB  | succeeds, peak 6.8 GB RSS            |
+| heap cap | result                                   |
+| -------- | ---------------------------------------- |
+| 6144 MB  | V8 heap OOM (peak 6.9 GB RSS)            |
+| 7168 MB  | **succeeds**, peak 6.9-7.2 GB RSS, 2m22s |
+| 8192 MB  | succeeds, peak 6.8 GB RSS                |
 
 `package.json` therefore builds with `--max-old-space-size=7168` and pins
-`engines.node` to `20.x` (the failing build ran Node 26, which also broke the
+`engines.node` to `26.x`. Vercel discontinued Node 20, so anything lower fails
+before the install step with `Node.js Version "20.x" is discontinued`. Measured on
+Node 26.13.1 (the version Vercel runs): peak 6.9 GB RSS.
 node-gyp native steps for `bigint-buffer` and `dtrace-provider`).
 `vite.config.ts` additionally sets `reportCompressedSize: false` and
 `rollupOptions.maxParallelFileOps: 2`.
