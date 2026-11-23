@@ -1,7 +1,7 @@
 {
     "buildCommand": "yarn build",
     "git": {
-        "deploymentEnabled": false
+        "deploymentEnabled": true
     },
     "headers": [
         {
