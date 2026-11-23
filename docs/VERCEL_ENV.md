@@ -191,3 +191,61 @@ node-gyp native steps for `bigint-buffer` and `dtrace-provider`).
 
 Do not raise the heap cap back to 8096 on a Basic machine — it makes the crash
 look like a random container kill instead of a clear V8 heap error.
+
+## How to deploy: the repository already builds on GitHub Actions
+
+Vercel's Hobby build machine is **2 vCPU / 8 GB** and cannot be upgraded. This
+app's build peaks at ~7 GB, so the container kills it during "rendering chunks"
+every time: raise the heap cap and the container kills the process, lower it and
+V8 itself runs out. There is no cap that satisfies both, so the build has to run
+somewhere with more memory.
+
+The repository already ships two workflows that do exactly that, and both were
+left in place. A **public** repository gets a **4 vCPU / 16 GB** GitHub-hosted
+runner for free, so the bundle is built there and only the prebuilt output is
+uploaded to Vercel:
+
+| Workflow     | File                 | Trigger                                             | Result            |
+| ------------ | -------------------- | --------------------------------------------------- | ----------------- |
+| `DeployProd` | `deploy_vercel.yml`  | push to the `production` branch, or manual dispatch | production deploy |
+| `DeployQA`   | `preview_vercel.yml` | push to `master`, pull requests                     | preview URL       |
+
+Both run `vercel pull` -> `vercel build` -> `vercel deploy --prebuilt`, so
+**Vercel never builds**. `vercel.json` therefore sets
+`git.deploymentEnabled: false`, which stops Vercel from attempting (and failing)
+its own build on every push.
+
+### Deploying
+
+-   **Production:** Actions -> **DeployProd** -> _Run workflow_ (it deploys the
+    default branch), or create a `production` branch and merge into it.
+-   **Preview:** just push to `master` (or open a PR) and `DeployQA` comments the
+    preview URL.
+
+### One-time setup (three repository secrets, shared by both workflows)
+
+1. Create a token at https://vercel.com/account/tokens -> **`VERCEL_TOKEN`**
+2. Run `vercel link` once in the repository, then read `.vercel/project.json`:
+    - `projectId` -> **`VERCEL_PROJECT_ID`**
+    - `orgId` -> **`VERCEL_ORG_ID`**
+3. Add all three under **Settings -> Secrets and variables -> Actions**
+   (the _Secrets_ tab, not _Variables_, and not Vercel's Environment Variables).
+
+Environment variables are **not** duplicated into GitHub: `vercel pull`
+downloads them from the Vercel project, so the dashboard stays the single source
+of truth.
+
+The two `release` jobs (version bumps pushed to `GoodDollar/GoodProtocolUI`) are
+now gated on `github.repository == 'GoodDollar/GoodProtocolUI'`, so a fork can
+never attempt to push a release upstream.
+
+### Manual fallback from your own machine
+
+```bash
+vercel pull --yes --environment=production
+vercel build --prod
+vercel deploy --prebuilt --prod
+```
+
+If the project later moves to a Pro plan with an Enhanced/Turbo build machine,
+set `git.deploymentEnabled` back to `true` and Vercel can build on its own again.
